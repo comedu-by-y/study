@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>과목: 정보 - 3단원 학습 내용 및 과제 제출</title>
+<style>
+    /* 1, 2레벨과 동일한 전체 색상 변수 설정 */
+    :root {
+        --primary-brown: #8C5A4B;
+        --primary-dark: #6A4235;
+        --bg-beige: #F5F1EE;
+        --text-navy: #0A1F44;
+        --text-light: #555555;
+        --white: #FFFFFF;
+        --accent-blue: #4A90E2; 
+        --hover-bg: #F4F8FC;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+        background-color: var(--bg-beige);
+        color: var(--text-navy);
+    }
+
+    /* 상단 네비게이션 (헤더) */
+    header {
+        background-color: var(--white);
+        padding: 15px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .logo {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--primary-brown);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none; /* 추가: 링크 밑줄 제거 */
+        transition: transform 0.2s ease; /* 추가: 마우스 오버 시 부드러운 효과 */
+    }
+    .logo:hover {
+        transform: scale(1.05); /* 추가: 마우스 올리면 로고가 살짝 커짐 */
+    }
+    .logo-circle {
+        background-color: var(--primary-brown);
+        color: var(--white);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 16px;
+    }
+
+    nav {
+        display: flex;
+        gap: 25px;
+    }
+    nav a {
+        text-decoration: none;
+        color: var(--text-navy);
+        font-weight: 600;
+        font-size: 16px;
+    }
+    nav a:hover {
+        color: var(--primary-brown);
+    }
+
+    /* 서브페이지 경로(Breadcrumb) 및 배너 */
+    .breadcrumb-banner {
+        background-color: var(--white);
+        color: var(--text-navy);
+        padding: 30px 20px;
+        text-align: center;
+        border-bottom: 2px solid #EAEAEA;
+    }
+    .breadcrumb {
+        font-size: 14px;
+        color: var(--text-light);
+        margin-bottom: 10px;
+    }
+    .breadcrumb span {
+        color: var(--primary-brown);
+        font-weight: bold;
+    }
+    .breadcrumb-banner h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--primary-dark);
+    }
+
+    /* 메인 콘텐츠 - 3레벨 학습 리스트 */
+    .container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .learning-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* 학습 내용 버튼 스타일 */
+    .learning-btn {
+        display: flex;
+        background-color: var(--white);
+        border-radius: 12px;
+        overflow: hidden;
+        text-decoration: none;
+        color: var(--text-navy);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        border: 2px solid transparent;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+    }
+    .learning-btn:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        border-color: var(--accent-blue);
+        background-color: var(--hover-bg);
+    }
+    .btn-preview {
+        width: 240px;
+        min-height: 160px;
+        background-color: #E2E8F0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .btn-preview::before {
+        content: '🖥️ 미리보기';
+        color: #718096;
+        font-weight: bold;
+        font-size: 16px;
+    }
+    .btn-info {
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex-grow: 1;
+    }
+    .btn-title {
+        font-size: 22px;
+        font-weight: 900;
+        margin: 0 0 15px 0;
+        color: var(--text-navy);
+    }
+    .learning-btn:hover .btn-title {
+        color: var(--accent-blue);
+    }
+    .btn-details {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .btn-details li {
+        font-size: 15px;
+        color: var(--text-light);
+        margin-bottom: 8px;
+        line-height: 1.5;
+        display: flex;
+        align-items: flex-start;
+    }
+    .btn-details li::before {
+        content: '•';
+        color: var(--primary-brown);
+        font-weight: bold;
+        margin-right: 8px;
+        font-size: 18px;
+        line-height: 1.2;
+    }
+    .btn-arrow {
+        display: flex;
+        align-items: center;
+        padding: 0 25px;
+        color: #CBD5E0;
+        font-size: 24px;
+        transition: color 0.3s ease;
+    }
+    .learning-btn:hover .btn-arrow {
+        color: var(--accent-blue);
+    }
+
+    /* ★ 구글 클래스룸 과제 제출 영역 스타일 ★ */
+    .assignment-section {
+        margin-top: 50px;
+        padding: 40px 30px;
+        background-color: #F0F6FF; /* 눈에 띄는 연한 파란색 배경 */
+        border-radius: 16px;
+        text-align: center;
+        border: 2px dashed var(--accent-blue);
+        box-shadow: 0 8px 16px rgba(74, 144, 226, 0.1);
+    }
+    .assignment-section h2 {
+        margin: 0 0 10px 0;
+        color: var(--text-navy);
+        font-size: 24px;
+    }
+    .assignment-section p {
+        color: var(--text-light);
+        font-size: 16px;
+        margin-bottom: 25px;
+    }
+    .assignment-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background-color: var(--accent-blue);
+        color: var(--white);
+        padding: 16px 40px;
+        border-radius: 30px;
+        font-size: 18px;
+        font-weight: 800;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 12px rgba(74, 144, 226, 0.3);
+    }
+    .assignment-btn:hover {
+        background-color: #357ABD;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(74, 144, 226, 0.4);
+    }
+    .assignment-icon {
+        font-size: 24px;
+    }
+
+    /* 모바일 반응형 처리 */
+    @media (max-width: 650px) {
+        .learning-btn { flex-direction: column; }
+        .btn-preview { width: 100%; height: 180px; }
+        .btn-arrow { display: none; }
+        .assignment-btn { padding: 14px 25px; font-size: 16px; }
+    }
+
+    /* 바닥글 (Footer) */
+    footer {
+        background-color: #3E2723;
+        color: #D7CCC8;
+        padding: 40px 20px;
+        margin-top: 60px;
+    }
+    .footer-content {
+        max-width: 1000px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        font-size: 14px;
+    }
+    .footer-col h3 { color: var(--white); font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .footer-col p, .footer-col ul { margin: 0; padding: 0; list-style: none; line-height: 1.8; }
+    .footer-col a { color: #D7CCC8; text-decoration: none; }
+    .footer-col a:hover { color: var(--white); }
+    @media (max-width: 600px) { .footer-content { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <header>
+        <!-- ★ 로고를 클릭 가능한 링크(a 태그)로 변경했습니다 ★ -->
+        <!-- href에 1레벨(메인 홈페이지) 주소를 넣으시면 됩니다. -->
+        <a href="https://sites.google.com/view/your-site/" target="_top" class="logo">
+            <div class="logo-circle">AI</div>LOGO
+        </a>
+        
+        <nav><a href="#">홈</a><a href="#">과목</a><a href="#">자료실</a><a href="#">FAQ</a></nav>
+    </header>
+
+    <!-- 3레벨 학습 리스트 및 과제 제출 버튼 -->
+    <div class="container">
+        <!-- 기존 학습 내용 리스트 -->
+        <div class="learning-list">
+            <a href="#" target="_top" class="learning-btn">
+                <div class="btn-preview" style="background-color: #E3F2FD;"><span style="font-size: 40px; position:absolute; opacity: 0.2;">🐍</span></div>
+                <div class="btn-info">
+                    <div class="btn-title">파이썬 기초 문법 실습</div>
+                    <ul class="btn-details">
+                        <li>내용: 변수와 자료형, 연산자를 활용한 기초 코딩 실습</li>
+                        <li>교과서 페이지: p.102 ~ p.108</li>
+                    </ul>
+                </div>
+                <div class="btn-arrow">➔</div>
+            </a>
+            
+            <a href="#" target="_top" class="learning-btn">
+                <div class="btn-preview" style="background-color: #FFF3E0;"><span style="font-size: 40px; position:absolute; opacity: 0.2;">⚙️</span></div>
+                <div class="btn-info">
+                    <div class="btn-title">알고리즘 흐름도 시뮬레이터</div>
+                    <ul class="btn-details">
+                        <li>내용: 조건문과 반복문을 시각적으로 설계하고 실행 결과를 확인하는 시뮬레이션</li>
+                        <li>교과서 페이지: p.115 ~ p.120</li>
+                    </ul>
+                </div>
+                <div class="btn-arrow">➔</div>
+            </a>
+        </div>
+
+        <!-- ★ 새롭게 추가된 구글 클래스룸 과제 제출 영역 ★ -->
+        <div class="assignment-section">
+            <h2>📝 단원 학습을 마쳤나요?</h2>
+            <p>실습을 완료했다면, 아래 버튼을 눌러 구글 클래스룸에 과제를 제출해 주세요.</p>
+            
+            <!-- target="_blank"를 사용하여 클래스룸이 새 창에서 열리도록 설정 -->
+            <a href="https://classroom.google.com/" target="_blank" class="assignment-btn">
+                <span class="assignment-icon">🏫</span>
+                구글 클래스룸으로 과제 제출하기
+            </a>
+        </div>
+        
+    </div>
+
+ <!-- 4. 바닥글 (Footer) -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <h3>연락처</h3>
+                <p>📞 x</p>
+                <p>✉️ info@schoolai.com</p>
+            </div>
+            <div class="footer-col">
+                <h3>과목</h3>
+                <ul>
+                    <li><a href="#">정보</a></li>
+                    <li><a href="#">인공지능기초</a></li>
+                    <li><a href="#">데이터과학과 머신러닝</a></li>
+                    <li><a href="#">데이터 과학</a></li>
+                    <li><a href="#">소프트웨어와 생활</a></li>
+                    <li><a href="#">정보과학</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h3>학습 자료실</h3>
+                <ul>
+                    <li><a href="#">수업 자료 PDF</a></li>
+                    <li><a href="#">참고 링크</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
