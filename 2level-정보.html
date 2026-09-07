@@ -106,17 +106,14 @@
     
     .padlet-wrapper {
         display: flex;
+        flex-wrap: wrap; /* ★ 이 줄을 추가하세요: 화면에 맞춰 자동 줄바꿈 */
         gap: 20px;
-        overflow-x: auto;
+        /* overflow-x: auto;  <-- 이 줄은 지워주세요! */
         padding-bottom: 20px;
         align-items: flex-start;
-        width: max-content; /* ★ 콘텐츠 크기만큼 너비 지정 */
-        margin: 0 auto;     /* ★ 중앙 정렬 */
+        justify-content: center; 
     }
 
-    /* 가로 스크롤바 디자인 */
-    .padlet-wrapper::-webkit-scrollbar { height: 10px; }
-    .padlet-wrapper::-webkit-scrollbar-thumb { background: #ccc; border-radius: 5px; }
 
     /* 각 단원을 나타내는 세로 기둥 */
     .padlet-column {
@@ -225,21 +222,19 @@
         font-size: 24px;
     }
 
-    /* 반응형 처리 (태블릿 및 모바일) */
-    @media (max-width: 950px) {
-        .learning-grid {
-            grid-template-columns: 1fr; /* 화면이 좁아지면 1단으로 변경 */
-            max-width: 700px;
-            margin: 0 auto;
-        }
-    }
-    
+    /* ★ 반응형 처리 (모바일: 패들렛 세로 1단 배치) ★ */
     @media (max-width: 650px) {
-        .learning-grid { max-width: 100%; }
-        .learning-btn { flex-direction: column; } /* 세로 배치로 변경 */
-        .btn-preview { width: 100%; height: 180px; }
-        .btn-arrow { display: none; }
-        .assignment-btn { padding: 14px 25px; font-size: 16px; }
+        .padlet-column {
+            flex: 0 0 100%; /* 기둥이 모바일 화면 너비를 100% 꽉 채우도록 변경 */
+            max-width: 100%;
+        }
+        .board-container {
+            padding: 0 10px; /* 모바일에서 좌우 여백을 줄여 화면을 넓게 씀 */
+        }
+        .assignment-btn { 
+            padding: 14px 25px; 
+            font-size: 16px; /* 모바일에서 버튼 크기 약간 축소 */
+        }
     }
 
     /* 바닥글 (Footer) */
