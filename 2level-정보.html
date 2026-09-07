@@ -106,23 +106,25 @@
     
     .padlet-wrapper {
         display: flex;
-        flex-wrap: wrap; /* ★ 이 줄을 추가하세요: 화면에 맞춰 자동 줄바꿈 */
+        flex-wrap: nowrap; /* 조건 3: 무조건 1줄 유지 (줄바꿈 없음) */
+        justify-content: center; /* 조건 1: 기둥들을 화면 한가운데로 정렬 */
+        overflow-x: hidden; /* 조건 2: 가로 스크롤 강제 제거 */
         gap: 20px;
-        /* overflow-x: auto;  <-- 이 줄은 지워주세요! */
         padding-bottom: 20px;
         align-items: flex-start;
-        justify-content: center; 
+        width: 100%;
     }
-
 
     /* 각 단원을 나타내는 세로 기둥 */
     .padlet-column {
-        flex: 0 0 300px; /* 각 단원 기둥의 너비를 300px로 고정 */
+        /* 화면 크기에 맞춰 5개가 균일하게 찌그러지거나 늘어나도록 자동 맞춤 */
+        flex: 1 1 0; 
+        min-width: 200px; /* 아무리 줄어들어도 카드가 너무 깨지지 않게 최소 너비 방어 */
+        max-width: 300px; /* 화면이 엄청 넓어도 기둥 하나가 300px 이상 뚱뚱해지지 않게 고정 */
         display: flex;
         flex-direction: column;
         gap: 15px;
     }
-
     /* 단원 제목 (기둥 머리글) */
     .column-header {
         background-color: var(--white);
@@ -152,18 +154,7 @@
         border-color: var(--accent-blue);
     }
 
-    /* 카드 안의 썸네일(미리보기) */
-    .card-preview {
-        width: 100%;
-        height: 130px;
-        background-color: #E2E8F0;
-        border-radius: 6px;
-        margin-bottom: 15px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 40px;
-    }
+    
     .card-title {
         font-size: 18px;
         font-weight: 900;
@@ -223,17 +214,21 @@
     }
 
     /* ★ 반응형 처리 (모바일: 패들렛 세로 1단 배치) ★ */
+
     @media (max-width: 650px) {
+        .padlet-wrapper {
+            flex-direction: column; /* ★ 추가: 모바일에서는 배열 방향을 세로로 변경 */
+        }
         .padlet-column {
             flex: 0 0 100%; /* 기둥이 모바일 화면 너비를 100% 꽉 채우도록 변경 */
             max-width: 100%;
         }
         .board-container {
-            padding: 0 10px; /* 모바일에서 좌우 여백을 줄여 화면을 넓게 씀 */
+            padding: 0 10px; 
         }
         .assignment-btn { 
             padding: 14px 25px; 
-            font-size: 16px; /* 모바일에서 버튼 크기 약간 축소 */
+            font-size: 16px; 
         }
     }
 
@@ -284,7 +279,6 @@
                 
                 <!-- 1단원 학습 카드 1 -->
                 <a href="#" target="_top" class="padlet-card">
-                    <div class="card-preview" style="background-color: #E3F2FD;">📖</div>
                     <div class="card-title">정보 윤리 사례 분석</div>
                     <ul class="card-details">
                         <li>내용: 올바른 디지털 시민 의식</li>
@@ -299,7 +293,6 @@
 
                 <!-- 카드 1 -->
                 <a href="#" target="_top" class="padlet-card">
-                    <div class="card-preview" style="background-color: #FFF3E0;">📊</div>
                     <div class="card-title">디지털 데이터 표현</div>
                     <ul class="card-details">
                         <li>내용: 2진수 변환 실습</li>
@@ -314,7 +307,6 @@
                 
                 <!-- 카드 1 -->
                 <a href="#" target="_top" class="padlet-card">
-                    <div class="card-preview" style="background-color: #E8F5E9;">🐍</div>
                     <div class="card-title">파이썬 기초 문법</div>
                     <ul class="card-details">
                         <li>내용: 변수와 자료형 코딩 실습</li>
@@ -324,7 +316,6 @@
                 
                 <!-- 카드 2 -->
                 <a href="#" target="_top" class="padlet-card">
-                    <div class="card-preview" style="background-color: #F3E5F5;">⚙️</div>
                     <div class="card-title">흐름도 시뮬레이터</div>
                     <ul class="card-details">
                         <li>내용: 조건문과 반복문 시각화</li>
@@ -337,7 +328,6 @@
             <div class="padlet-column">
                 <div class="column-header">4단원: 인공지능</div>
                 <a href="#" target="_top" class="padlet-card">
-                    <div class="card-preview" style="background-color: #E1F5FE;">💻</div>
                     <div class="card-title">하드웨어 구성 요소</div>
                     <ul class="card-details">
                         <li>내용: CPU와 메모리의 역할</li>
@@ -350,7 +340,6 @@
             <div class="padlet-column">
                 <div class="column-header">5단원: 디지털 문화</div>
                 <a href="#" target="_top" class="padlet-card">
-                    <div class="card-preview" style="background-color: #FFF9C4;">🤖</div>
                     <div class="card-title">머신러닝 체험하기</div>
                     <ul class="card-details">
                         <li>내용: 티처블 머신을 활용한 모델 학습</li>
