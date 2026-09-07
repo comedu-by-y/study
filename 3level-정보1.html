@@ -107,9 +107,11 @@
     .padlet-wrapper {
         display: flex;
         gap: 20px;
-        overflow-x: auto; /* 화면이 좁을 때 가로 스크롤 생성 */
+        overflow-x: auto;
         padding-bottom: 20px;
-        align-items: flex-start; /* 카드들이 위쪽부터 차곡차곡 쌓이도록 */
+        align-items: flex-start;
+        width: max-content; /* ★ 콘텐츠 크기만큼 너비 지정 */
+        margin: 0 auto;     /* ★ 중앙 정렬 */
     }
 
     /* 가로 스크롤바 디자인 */
@@ -373,7 +375,7 @@
         </div>
         
     </div>
-    
+
  <!-- 4. 바닥글 (Footer) -->
     <footer>
         <div class="footer-content">
