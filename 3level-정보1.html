@@ -97,102 +97,87 @@
         color: var(--primary-dark);
     }
 
-    /* 메인 콘텐츠 - 3레벨 학습 리스트 */
-    .container {
-        max-width: 1100px; /* 2단 배열을 위해 900px에서 1100px로 넓힘 */
-        margin: 40px auto;
+    /* ★ 패들렛 스타일 (5단) 레이아웃 설정 ★ */
+    .board-container {
+        max-width: 100%; /* 화면 꽉 차게 가로 폭 확대 */
+        margin: 20px auto 40px auto;
         padding: 0 20px;
     }
-
-    /* learning-list를 learning-grid로 변경 */
-    .learning-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr); /* 2칸 배열 */
-        gap: 25px;
-    }
-
-    /* 학습 내용 버튼 스타일 */
-    .learning-btn {
+    
+    .padlet-wrapper {
         display: flex;
-        background-color: var(--white);
-        border-radius: 12px;
-        overflow: hidden;
-        text-decoration: none;
-        color: var(--text-navy);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        border: 2px solid transparent;
-        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+        gap: 20px;
+        overflow-x: auto; /* 화면이 좁을 때 가로 스크롤 생성 */
+        padding-bottom: 20px;
+        align-items: flex-start; /* 카드들이 위쪽부터 차곡차곡 쌓이도록 */
     }
-    .learning-btn:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        border-color: var(--accent-blue);
-        background-color: var(--hover-bg);
-    }
-    .btn-preview {
-        width: 240px;
-        min-height: 160px;
-        background-color: #E2E8F0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: relative;
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-    .btn-preview::before {
-        content: '🖥️ 미리보기';
-        color: #718096;
-        font-weight: bold;
-        font-size: 16px;
-    }
-    .btn-info {
-        padding: 25px;
+
+    /* 가로 스크롤바 디자인 */
+    .padlet-wrapper::-webkit-scrollbar { height: 10px; }
+    .padlet-wrapper::-webkit-scrollbar-thumb { background: #ccc; border-radius: 5px; }
+
+    /* 각 단원을 나타내는 세로 기둥 */
+    .padlet-column {
+        flex: 0 0 300px; /* 각 단원 기둥의 너비를 300px로 고정 */
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        flex-grow: 1;
+        gap: 15px;
     }
-    .btn-title {
-        font-size: 22px;
+
+    /* 단원 제목 (기둥 머리글) */
+    .column-header {
+        background-color: var(--white);
+        padding: 15px;
+        border-radius: 8px;
         font-weight: 900;
-        margin: 0 0 15px 0;
+        text-align: center;
         color: var(--text-navy);
+        border-top: 4px solid var(--primary-brown);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    .learning-btn:hover .btn-title {
-        color: var(--accent-blue);
+
+    /* 학습 내용 카드 디자인 */
+    .padlet-card {
+        background-color: var(--white);
+        border-radius: 10px;
+        padding: 15px;
+        text-decoration: none;
+        color: var(--text-navy);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid transparent;
     }
-    .btn-details {
-        margin: 0;
-        padding: 0;
-        list-style: none;
+    .padlet-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        border-color: var(--accent-blue);
     }
-    .btn-details li {
-        font-size: 15px;
-        color: var(--text-light);
-        margin-bottom: 8px;
-        line-height: 1.5;
+
+    /* 카드 안의 썸네일(미리보기) */
+    .card-preview {
+        width: 100%;
+        height: 130px;
+        background-color: #E2E8F0;
+        border-radius: 6px;
+        margin-bottom: 15px;
         display: flex;
-        align-items: flex-start;
-    }
-    .btn-details li::before {
-        content: '•';
-        color: var(--primary-brown);
-        font-weight: bold;
-        margin-right: 8px;
-        font-size: 18px;
-        line-height: 1.2;
-    }
-    .btn-arrow {
-        display: flex;
+        justify-content: center;
         align-items: center;
-        padding: 0 25px;
-        color: #CBD5E0;
-        font-size: 24px;
-        transition: color 0.3s ease;
+        font-size: 40px;
     }
-    .learning-btn:hover .btn-arrow {
-        color: var(--accent-blue);
+    .card-title {
+        font-size: 18px;
+        font-weight: 900;
+        margin: 0 0 10px 0;
+    }
+    .card-details {
+        margin: 0; padding: 0; list-style: none;
+    }
+    .card-details li {
+        font-size: 13px;
+        color: var(--text-light);
+        margin-bottom: 5px;
+        line-height: 1.4;
     }
 
     /* ★ 구글 클래스룸 과제 제출 영역 스타일 ★ */
@@ -290,69 +275,97 @@
         <nav><a href="#">홈</a><a href="#">과목</a><a href="#">자료실</a><a href="#">FAQ</a></nav>
     </header>
 
-    <!-- 3레벨 학습 리스트 및 과제 제출 버튼 -->
-    <div class="container">
-        <!-- 기존 학습 내용 리스트 -->
-<!-- 기존 learning-list 대신 learning-grid 적용 -->
-        <div class="learning-grid">
+<!-- 3레벨 패들렛형 학습 보드 및 과제 제출 -->
+    <div class="board-container">
+        
+        <!-- 좌우로 스크롤되는 보드 영역 -->
+        <div class="padlet-wrapper">
             
-            <!-- 항목 1 -->
-            <a href="#" target="_top" class="learning-btn">
-                <div class="btn-preview" style="background-color: #E3F2FD;"><span style="font-size: 40px; position:absolute; opacity: 0.2;">🐍</span></div>
-                <div class="btn-info">
-                    <div class="btn-title">파이썬 기초 문법 실습</div>
-                    <ul class="btn-details">
-                        <li>내용: 변수와 자료형, 연산자를 활용한 기초 코딩 실습</li>
-                        <li>교과서 페이지: p.102 ~ p.108</li>
+            <!-- 1단원 컬럼 -->
+            <div class="padlet-column">
+                <div class="column-header">1단원: 정보 문화</div>
+                
+                <!-- 1단원 학습 카드 1 -->
+                <a href="#" target="_top" class="padlet-card">
+                    <div class="card-preview" style="background-color: #E3F2FD;">📖</div>
+                    <div class="card-title">정보 윤리 사례 분석</div>
+                    <ul class="card-details">
+                        <li>내용: 올바른 디지털 시민 의식</li>
+                        <li>교과서: p.12 ~ p.18</li>
                     </ul>
-                </div>
-            </a>
+                </a>
+            </div>
+
+            <!-- 2단원 컬럼 -->
+            <div class="padlet-column">
+                <div class="column-header">2단원: 자료와 정보</div>
+                <a href="#" target="_top" class="padlet-card">
+                    <div class="card-preview" style="background-color: #FFF3E0;">📊</div>
+                    <div class="card-title">디지털 데이터 표현</div>
+                    <ul class="card-details">
+                        <li>내용: 2진수 변환 실습</li>
+                        <li>교과서: p.45 ~ p.50</li>
+                    </ul>
+                </a>
+            </div>
+
+            <!-- 3단원 컬럼 (기존에 작성하신 카드들) -->
+            <div class="padlet-column">
+                <div class="column-header">3단원: 문제 해결과 프로그래밍</div>
+                
+                <!-- 카드 1 -->
+                <a href="#" target="_top" class="padlet-card">
+                    <div class="card-preview" style="background-color: #E8F5E9;">🐍</div>
+                    <div class="card-title">파이썬 기초 문법</div>
+                    <ul class="card-details">
+                        <li>내용: 변수와 자료형 코딩 실습</li>
+                        <li>교과서: p.102 ~ p.108</li>
+                    </ul>
+                </a>
+                
+                <!-- 카드 2 -->
+                <a href="#" target="_top" class="padlet-card">
+                    <div class="card-preview" style="background-color: #F3E5F5;">⚙️</div>
+                    <div class="card-title">흐름도 시뮬레이터</div>
+                    <ul class="card-details">
+                        <li>내용: 조건문과 반복문 시각화</li>
+                        <li>교과서: p.115 ~ p.120</li>
+                    </ul>
+                </a>
+            </div>
+
+            <!-- 4단원 컬럼 -->
+            <div class="padlet-column">
+                <div class="column-header">4단원: 컴퓨팅 시스템</div>
+                <a href="#" target="_top" class="padlet-card">
+                    <div class="card-preview" style="background-color: #E1F5FE;">💻</div>
+                    <div class="card-title">하드웨어 구성 요소</div>
+                    <ul class="card-details">
+                        <li>내용: CPU와 메모리의 역할</li>
+                        <li>교과서: p.150 ~ p.155</li>
+                    </ul>
+                </a>
+            </div>
+
+            <!-- 5단원 컬럼 -->
+            <div class="padlet-column">
+                <div class="column-header">5단원: 인공지능과 미래 사회</div>
+                <a href="#" target="_top" class="padlet-card">
+                    <div class="card-preview" style="background-color: #FFF9C4;">🤖</div>
+                    <div class="card-title">머신러닝 체험하기</div>
+                    <ul class="card-details">
+                        <li>내용: 티처블 머신을 활용한 모델 학습</li>
+                        <li>교과서: p.180 ~ p.185</li>
+                    </ul>
+                </a>
+            </div>
             
-            <!-- 항목 2 -->
-            <a href="#" target="_top" class="learning-btn">
-                <div class="btn-preview" style="background-color: #FFF3E0;"><span style="font-size: 40px; position:absolute; opacity: 0.2;">⚙️</span></div>
-                <div class="btn-info">
-                    <div class="btn-title">알고리즘 흐름도 시뮬레이터</div>
-                    <ul class="btn-details">
-                        <li>내용: 조건문과 반복문을 시각적으로 설계하고 실행 결과를 확인하는 시뮬레이션</li>
-                        <li>교과서 페이지: p.115 ~ p.120</li>
-                    </ul>
-                </div>
-            </a>
-
-            <!-- 항목 3 (추가) -->
-            <a href="#" target="_top" class="learning-btn">
-                <div class="btn-preview" style="background-color: #E8F5E9;"><span style="font-size: 40px; position:absolute; opacity: 0.2;">📊</span></div>
-                <div class="btn-info">
-                    <div class="btn-title">공공 데이터 분석 미션</div>
-                    <ul class="btn-details">
-                        <li>내용: 기온 데이터를 파이썬으로 불러와 그래프로 시각화하는 프로젝트</li>
-                        <li>교과서 페이지: p.128 ~ p.135</li>
-                    </ul>
-                </div>
-            </a>
-
-            <!-- 항목 4 (추가) -->
-            <a href="#" target="_top" class="learning-btn">
-                <div class="btn-preview" style="background-color: #F3E5F5;"><span style="font-size: 40px; position:absolute; opacity: 0.2;">📖</span></div>
-                <div class="btn-info">
-                    <div class="btn-title">인공지능 윤리 이론 수업</div>
-                    <ul class="btn-details">
-                        <li>내용: 인공지능이 가져올 사회적 변화와 올바른 활용 가이드라인 학습</li>
-                        <li>교과서 페이지: p.140 ~ p.145</li>
-                    </ul>
-                </div>
-            </a>
-
         </div>
-        <!-- learning-grid 끝 -->
-
-        <!-- ★ 새롭게 추가된 구글 클래스룸 과제 제출 영역 ★ -->
-        <div class="assignment-section">
+        
+        <!-- 과제 제출 영역 (보드 아래 중앙에 고정) -->
+        <div class="assignment-section" style="max-width: 900px; margin: 40px auto 0 auto;">
             <h2>📝 단원 학습을 마쳤나요?</h2>
             <p>실습을 완료했다면, 아래 버튼을 눌러 구글 클래스룸에 과제를 제출해 주세요.</p>
-            
-            <!-- target="_blank"를 사용하여 클래스룸이 새 창에서 열리도록 설정 -->
             <a href="https://classroom.google.com/" target="_blank" class="assignment-btn">
                 <span class="assignment-icon">🏫</span>
                 구글 클래스룸으로 과제 제출하기
@@ -360,7 +373,7 @@
         </div>
         
     </div>
-
+    
  <!-- 4. 바닥글 (Footer) -->
     <footer>
         <div class="footer-content">
