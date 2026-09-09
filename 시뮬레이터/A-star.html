@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A* 알고리즘 시뮬레이터</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; display: flex; flex-direction: column; align-items: center; background-color: #f8f9fa; margin: 0; padding: 20px; }
+        h1 { color: #343a40; margin-bottom: 10px; }
+        .container { display: flex; gap: 20px; max-width: 1250px; width: 100%; }
+        
+        /* Graph Area */
+        #graph-area { position: relative; width: 850px; height: 520px; background: white; border: 2px solid #dee2e6; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        line { stroke: #ced4da; stroke-width: 3; transition: stroke 0.3s; }
+        line.path { stroke: #ffec99; stroke-width: 8; z-index: 1; }
+        
+        .edge-label { position: absolute; background: white; padding: 1px 4px; font-size: 11px; font-weight: bold; color: #495057; border-radius: 3px; border: 1px solid #ced4da; transform: translate(-50%, -50%); z-index: 2; pointer-events: none; }
+
+        .node { position: absolute; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; z-index: 3; transform: translate(-50%, -50%); transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); width: 60px; height: 60px; background-color: #e6d8ec; color: #343a40; }
+        .node.start { background-color: #ffcc80; }
+        .node.goal { background-color: #66bb6a; color: white; }
+        
+        /* Node States */
+        .node.open { border: 4px solid #4dabf7; box-sizing: border-box; }
+        .node.closed { background-color: #adb5bd; color: white; }
+        .node.current { border: 5px solid #ff6b6b; box-sizing: border-box; background-color: #ffc9c9; }
+
+        .heuristic-badge { position: absolute; top: -8px; left: -8px; background: white; border: 2px solid #ced4da; border-radius: 4px; padding: 1px 5px; font-size: 12px; font-weight: bold; color: #495057; box-shadow: 0 1px 3px rgba(0,0,0,0.3); z-index: 4; }
+
+        /* Panel Area */
+        #panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+        .card { background: white; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card h3 { margin-top: 0; font-size: 16px; color: #495057; border-bottom: 2px solid #f1f3f5; padding-bottom: 5px; }
+        
+        button { background-color: #339af0; color: white; border: none; padding: 10px 15px; font-size: 16px; border-radius: 5px; cursor: pointer; transition: background 0.2s; font-weight: bold; width: 100%; }
+        button:hover { background-color: #228be6; }
+        button:disabled { background-color: #adb5bd; cursor: not-allowed; }
+
+        .list-box { min-height: 50px; max-height: 150px; overflow-y: auto; background: #f8f9fa; border: 1px solid #ced4da; border-radius: 4px; padding: 8px; font-size: 13px; line-height: 1.6; }
+        .log-box { height: 160px; overflow-y: auto; font-size: 12px; line-height: 1.4; background: #212529; color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; }
+        .log-entry { margin-bottom: 4px; border-bottom: 1px dashed #495057; padding-bottom: 4px; }
+        .highlight { color: #fcc419; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>⭐ A* 알고리즘 탐색 시뮬레이터 (f = g + h)</h1>
+    
+    <div class="container">
+        <!-- 그래프 시각화 영역 -->
+        <div id="graph-area">
+            <svg id="edges-svg"></svg>
+            <div id="labels-container"></div>
+            <div id="nodes-container"></div>
+        </div>
+
+        <!-- 컨트롤 패널 -->
+        <div id="panel">
+            <div class="card">
+                <h3>제어 (Controls)</h3>
+                <button id="next-btn" onclick="nextStep()">다음 단계 (Next Step)</button>
+                <button id="reset-btn" onclick="resetSim()" style="background-color: #fa5252; margin-top: 10px;">초기화 (Reset)</button>
+            </div>
+
+            <div class="card">
+                <h3>현재 상태 (Status)</h3>
+                <p><strong>현재 탐색 노드:</strong> <span id="current-node-label" style="color:#ff6b6b; font-weight:bold;">없음</span></p>
+                <strong>탐색 대기 명단 (Open List):</strong>
+                <div class="list-box" id="open-list-box"></div>
+                <strong style="display:block; margin-top:10px;">탐색 완료 명단 (Closed List):</strong>
+                <div class="list-box" id="closed-list-box" style="min-height:30px;"></div>
+            </div>
+
+            <div class="card">
+                <h3>탐색 로그 (Logs)</h3>
+                <div class="log-box" id="log-box"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 노드 데이터 (휴리스틱 h값, 좌표)
+    const nodes = {
+        '인천': { h: 15, x: 70, y: 150 },
+        '서울': { h: 13, x: 190, y: 170 },
+        '광주': { h: 16, x: 80, y: 440 },
+        '춘천': { h: 13, x: 370, y: 70 },
+        '양평': { h: 11, x: 360, y: 190 },
+        '대전': { h: 12, x: 390, y: 320 },
+        '대구': { h: 13, x: 500, y: 450 },
+        '원주': { h: 10, x: 510, y: 220 },
+        '양양': { h: 8, x: 610, y: 60 },
+        '제천': { h: 10, x: 570, y: 290 },
+        '포항': { h: 10, x: 670, y: 430 },
+        '강릉항': { h: 7, x: 690, y: 140 },
+        '묵호항': { h: 6, x: 660, y: 210 },
+        '후포항': { h: 11, x: 700, y: 320 },
+        '울릉군': { h: 1, x: 830, y: 240 },
+        '독도': { h: 0, x: 950, y: 260 }
+    };
+
+    // 간선 데이터 [노드1, 노드2, 이동 비용(g)]
+    const edges = [
+        ['인천', '서울', 2], ['광주', '서울', 4], ['서울', '춘천', 2], ['서울', '양평', 1], ['서울', '대전', 3],
+        ['춘천', '양양', 1], ['양평', '양양', 2], ['양평', '원주', 2], ['대전', '원주', 2], ['대전', '제천', 2], 
+        ['대전', '대구', 2], ['대구', '포항', 1], ['원주', '제천', 2], ['원주', '묵호항', 2], ['양양', '강릉항', 1], 
+        ['양양', '묵호항', 1], ['제천', '묵호항', 2], ['제천', '후포항', 3], ['강릉항', '울릉군', 3], 
+        ['묵호항', '울릉군', 3], ['후포항', '울릉군', 2], ['포항', '울릉군', 3], ['울릉군', '독도', 2]
+    ];
+
+    const scaleX = 0.85;
+    const scaleY = 0.95;
+
+    let openList = [];   // 노드 이름 배열
+    let closedList = []; // 노드 이름 배열
+    let gCosts = {};     // 각 노드별 최단 실제 이동 거리 g
+    let parents = {};    // 경로 추적용 부모 노드
+    let isFinished = false;
+    let stepCount = 0;
+    let finalPath = [];
+
+    const svg = document.getElementById('edges-svg');
+    const labelsContainer = document.getElementById('labels-container');
+    const container = document.getElementById('nodes-container');
+    const logBox = document.getElementById('log-box');
+
+    function initGraph() {
+        // 간선 및 가중치 라벨 그리기
+        edges.forEach(edge => {
+            const n1 = nodes[edge[0]];
+            const n2 = nodes[edge[1]];
+            const weight = edge[2];
+
+            // SVG 선
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', n1.x * scaleX);
+            line.setAttribute('y1', n1.y * scaleY);
+            line.setAttribute('x2', n2.x * scaleX);
+            line.setAttribute('y2', n2.y * scaleY);
+            line.id = `edge-${edge[0]}-${edge[1]}`;
+            svg.appendChild(line);
+
+            // 가중치 텍스트 박스
+            const mx = ((n1.x + n2.x) / 2) * scaleX;
+            const my = ((n1.y + n2.y) / 2) * scaleY;
+            const label = document.createElement('div');
+            label.className = 'edge-label';
+            label.style.left = `${mx}px`;
+            label.style.top = `${my}px`;
+            label.innerText = weight;
+            labelsContainer.appendChild(label);
+        });
+
+        // 노드 그리기
+        Object.keys(nodes).forEach(key => {
+            const n = nodes[key];
+            const nodeDiv = document.createElement('div');
+            nodeDiv.className = 'node';
+            nodeDiv.id = `node-${key}`;
+            nodeDiv.style.left = `${n.x * scaleX}px`;
+            nodeDiv.style.top = `${n.y * scaleY}px`;
+            nodeDiv.innerText = key;
+
+            if (key === '서울') nodeDiv.classList.add('start');
+            if (key === '독도') nodeDiv.classList.add('goal');
+
+            const badge = document.createElement('div');
+            badge.className = 'heuristic-badge';
+            badge.innerText = n.h;
+            nodeDiv.appendChild(badge);
+
+            container.appendChild(nodeDiv);
+        });
+    }
+
+    function addLog(msg) {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        div.innerHTML = `[Step ${stepCount}] ${msg}`;
+        logBox.appendChild(div);
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function getEdgeWeight(u, v) {
+        for (let edge of edges) {
+            if ((edge[0] === u && edge[1] === v) || (edge[0] === v && edge[1] === u)) {
+                return edge[2];
+            }
+        }
+        return Infinity;
+    }
+
+    function getNeighbors(nodeKey) {
+        let neighbors = [];
+        edges.forEach(edge => {
+            if (edge[0] === nodeKey) neighbors.push(edge[1]);
+            if (edge[1] === nodeKey) neighbors.push(edge[0]);
+        });
+        return neighbors;
+    }
+
+    function updateUI(currentNode) {
+        document.getElementById('current-node-label').innerText = currentNode || '없음';
+        
+        // Open List 오름차순 정렬 (f = g + h 기준)
+        openList.sort((a, b) => (gCosts[a] + nodes[a].h) - (gCosts[b] + nodes[b].h));
+        
+        // 학생들이 이해하기 쉬운 세로 리스트 형식 (총비용 = 이동 + 예상)
+        const openStr = openList.map(n => {
+            const f = gCosts[n] + nodes[n].h;
+            return `- ${n} (총비용 f=${f} = 이동 g=${gCosts[n]} + 예상 h=${nodes[n].h})`;
+        }).join('<br>');
+        
+        document.getElementById('open-list-box').innerHTML = openStr || '<span style="color:#adb5bd">비어있음</span>';
+        document.getElementById('closed-list-box').innerText = closedList.join(', ') || '비어있음';
+
+        // 노드 스타일 갱신
+        Object.keys(nodes).forEach(key => {
+            const el = document.getElementById(`node-${key}`);
+            el.classList.remove('open', 'closed', 'current');
+            
+            if (key === currentNode) {
+                el.classList.add('current');
+            } else if (closedList.includes(key)) {
+                el.classList.add('closed');
+            } else if (openList.includes(key)) {
+                el.classList.add('open');
+            }
+        });
+
+        // 최종 경로 시각화
+        if (finalPath.length > 0) {
+            for (let i = 0; i < finalPath.length - 1; i++) {
+                let u = finalPath[i];
+                let v = finalPath[i+1];
+                let lineElem = document.getElementById(`edge-${u}-${v}`) || document.getElementById(`edge-${v}-${u}`);
+                if (lineElem) lineElem.classList.add('path');
+            }
+        }
+    }
+
+    function nextStep() {
+        if (isFinished) return;
+        stepCount++;
+
+        if (openList.length === 0) {
+            addLog('<span style="color:#ff6b6b">실패: 목적지에 도달할 수 없습니다.</span>');
+            isFinished = true;
+            document.getElementById('next-btn').disabled = true;
+            return;
+        }
+
+        // f값이 가장 작은 노드 추출
+        openList.sort((a, b) => (gCosts[a] + nodes[a].h) - (gCosts[b] + nodes[b].h));
+        const current = openList.shift();
+        const currentF = gCosts[current] + nodes[current].h;
+
+        addLog(`<span class="highlight">${current}</span> 선택 (f=${currentF}, g=${gCosts[current]}, h=${nodes[current].h})`);
+
+        // 목적지 도달 확인
+        if (current === '독도') {
+            addLog('<span style="color:#2b8a3e; font-weight:bold;">성공! 최단 경로로 독도에 도착했습니다! 🎉</span>');
+            closedList.push(current);
+            
+            // 경로 추적
+            let curr = '독도';
+            while (curr) {
+                finalPath.unshift(curr);
+                curr = parents[curr];
+            }
+            addLog(`최종 최단 경로: ${finalPath.join(' ➔ ')}`);
+
+            updateUI(current);
+            isFinished = true;
+            document.getElementById('next-btn').disabled = true;
+            return;
+        }
+
+        closedList.push(current);
+
+        // 인접 노드 탐색 및 비용 갱신 (Relaxation)
+        const neighbors = getNeighbors(current);
+        neighbors.forEach(neighbor => {
+            if (closedList.includes(neighbor)) return;
+
+            let tentativeG = gCosts[current] + getEdgeWeight(current, neighbor);
+
+            if (!openList.includes(neighbor)) {
+                openList.push(neighbor);
+                gCosts[neighbor] = tentativeG;
+                parents[neighbor] = current;
+                addLog(`&nbsp;&nbsp;↳ 추가: ${neighbor} (g=${tentativeG}, h=${nodes[neighbor].h}, f=${tentativeG + nodes[neighbor].h})`);
+            } else if (tentativeG < gCosts[neighbor]) {
+                gCosts[neighbor] = tentativeG;
+                parents[neighbor] = current;
+                addLog(`&nbsp;&nbsp;↳ 갱신: ${neighbor}의 이동 비용이 더 짧아짐 (g=${tentativeG})`);
+            }
+        });
+
+        updateUI(current);
+    }
+
+    function resetSim() {
+        openList = ['서울'];
+        closedList = [];
+        gCosts = { '서울': 0 };
+        parents = { '서울': null };
+        isFinished = false;
+        stepCount = 0;
+        finalPath = [];
+        document.getElementById('next-btn').disabled = false;
+        logBox.innerHTML = '';
+
+        // 선 스타일 초기화
+        document.querySelectorAll('line').forEach(l => l.classList.remove('path'));
+
+        addLog('시뮬레이션 초기화 완료. 시작 노드: 서울 (g=0)');
+        updateUI(null);
+    }
+
+    // 초기화 실행
+    initGraph();
+    resetSim();
+</script>
+</body>
+</html>

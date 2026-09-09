@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>DFS 시뮬레이터</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; }
+        
+        .header-container { margin-bottom: 20px; }
+        h2 { margin-top: 0; color: #2c3e50; }
+        .control-panel {
+            display: flex; gap: 15px; padding: 15px; background-color: white; 
+            border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            flex-wrap: wrap; align-items: center;
+        }
+        
+        button {
+            padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; 
+            border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-add { background-color: #28a745; color: white; }
+        .btn-add:hover { background-color: #218838; transform: translateY(-2px); }
+        .btn-delete { background-color: #dc3545; color: white; }
+        .btn-delete:hover { background-color: #c82333; transform: translateY(-2px); }
+        .btn-reset { background-color: #6c757d; color: white; }
+        .btn-reset:hover { background-color: #5a6268; transform: translateY(-2px); }
+        .btn-start { background-color: #007bff; color: white; margin-left: auto; font-size: 18px; padding: 12px 24px;}
+        .btn-start:hover { background-color: #0056b3; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,123,255,0.3); }
+        button:disabled { background-color: #cccccc; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        #order-container {
+            width: 100%; padding: 15px; border: 1px solid #dee2e6; background-color: white;
+            border-radius: 8px; overflow-x: auto; box-sizing: border-box; margin-bottom: 20px; min-height: 105px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .order-title { font-weight: bold; margin-bottom: 10px; font-size: 1.1em; color: #495057; }
+        .order-list { display: flex; flex-wrap: nowrap; gap: 15px; align-items: center; }
+        
+        /* 방문 순서 노드 크기 확대 */
+        .visited-node {
+            color: #d32f2f; font-weight: bold; font-size: 1.4em; border: 3px solid #d32f2f;
+            border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0; background-color: #fff;
+        }
+        .arrow { color: #6c757d; font-size: 1.5em; font-weight: bold; flex-shrink: 0; }
+        
+        #mynetwork {
+            width: 100%; height: 650px; border: 1px solid #dee2e6; border-radius: 8px;
+            background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .instruction { font-size: 0.9em; color: #6c757d; margin-left: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h2> DFS 시뮬레이터</h2>
+        <div class="control-panel">
+            <button class="btn-add" onclick="autoAddNode()">➕ 노드 자동 추가</button>
+            <button class="btn-delete" onclick="deleteSelectedNode()">🗑️ 선택된 노드 삭제</button>
+            <button class="btn-reset" onclick="resetGraph()">🔄 A~F 초기화</button>
+            <span class="instruction">※ 상위 노드는 움직이지 않습니다! 노드 클릭 후 삭제 가능.</span>
+            <button id="startBtn" class="btn-start" onclick="startDFS()">🚀 DFS 시작</button>
+        </div>
+    </div>
+
+    <div id="order-container">
+        <div class="order-title">실시간 방문 순서:</div>
+        <div class="order-list" id="visited-nodes"></div>
+    </div>
+
+    <div id="mynetwork"></div>
+
+    <script type="text/javascript">
+        // 노드 간격을 조금 더 넉넉하게 조정 (y축 시작점을 -220으로 상향)
+        const initialNodesData = [
+            {id: "A", label: "A", x: 0, y: -220},
+            {id: "B", label: "B", x: -320, y: -100},
+            {id: "C", label: "C", x: 320, y: -100},
+            {id: "D", label: "D", x: -480, y: 20},
+            {id: "E", label: "E", x: -160, y: 20},
+            {id: "F", label: "F", x: 160, y: 20}
+        ];
+        const initialEdgesData = [
+            {from: "A", to: "B"}, {from: "A", to: "C"},
+            {from: "B", to: "D"}, {from: "B", to: "E"},
+            {from: "C", to: "F"}
+        ];
+
+        let nodes = new vis.DataSet(initialNodesData);
+        let edges = new vis.DataSet(initialEdgesData);
+
+        const container = document.getElementById('mynetwork');
+        
+        const options = {
+            interaction: { selectConnectedEdges: false, dragNodes: false },
+            nodes: {
+                color: { background: 'white', border: '#343a40', highlight: { background: '#ffeeba', border: '#ffc107' } },
+                // 🌟 글자 크기(size)와 노드 너비(widthConstraint) 대폭 확대!
+                font: { size: 32, color: '#343a40', face: 'arial' },
+                shape: 'circle', 
+                borderWidth: 3, 
+                widthConstraint: 60, 
+                fixed: true
+            },
+            edges: {
+                color: { color: '#adb5bd', highlight: '#ffc107' },
+                width: 3, arrows: 'to', smooth: false 
+            },
+            physics: { enabled: false } 
+        };
+
+        let network = new vis.Network(container, { nodes, edges }, options);
+
+        function autoAddNode() {
+            const currentNodes = nodes.get();
+            if (currentNodes.length >= 26) return alert("알파벳 Z까지 모두 추가했습니다!");
+
+            const existingLabels = currentNodes.map(n => n.label);
+            let newNodeId = '';
+            for (let i = 65; i <= 90; i++) {
+                let char = String.fromCharCode(i);
+                if (!existingLabels.includes(char)) { newNodeId = char; break; }
+            }
+
+            if (currentNodes.length === 0) {
+                nodes.add({id: newNodeId, label: newNodeId, x: 0, y: -220});
+                return;
+            }
+
+            const edgesList = edges.get();
+            let root = currentNodes.find(n => !edgesList.some(e => e.to === n.id)) || currentNodes[0];
+            let queue = [root.id];
+            
+            let parentNode = null;
+            let isLeftChild = true;
+
+            while (queue.length > 0) {
+                let currId = queue.shift();
+                let currNode = currentNodes.find(n => n.id === currId);
+                
+                let childrenIds = edgesList.filter(e => e.from === currId).map(e => e.to);
+                let childrenNodes = currentNodes.filter(n => childrenIds.includes(n.id)).sort((a,b) => a.x - b.x);
+
+                if (childrenNodes.length < 2) {
+                    parentNode = currNode;
+                    if (childrenNodes.length === 1) {
+                        isLeftChild = childrenNodes[0].x > currNode.x; 
+                    }
+                    break;
+                }
+                queue.push(...childrenNodes.map(n => n.id));
+            }
+
+            if (parentNode) {
+                // 부모의 깊이 계산 (y간격을 120으로 늘림)
+                let depth = Math.round((parentNode.y - (-220)) / 120);
+                let offset = 320 / Math.pow(2, depth); 
+                
+                let newX = isLeftChild ? parentNode.x - offset : parentNode.x + offset;
+                let newY = parentNode.y + 120;
+                
+                nodes.add({id: newNodeId, label: newNodeId, x: newX, y: newY});
+                edges.add({from: parentNode.id, to: newNodeId});
+            }
+        }
+
+        function deleteSelectedNode() {
+            const selectedNodes = network.getSelectedNodes();
+            if (selectedNodes.length === 0) return alert("삭제할 노드를 마우스로 클릭해서 선택해주세요.");
+            network.deleteSelected();
+        }
+
+        function resetGraph() {
+            if(confirm("초기 상태로 되돌리시겠습니까?")) {
+                nodes.clear(); edges.clear();
+                nodes.add(initialNodesData); edges.add(initialEdgesData);
+                document.getElementById('visited-nodes').innerHTML = '';
+            }
+        }
+
+        function calculateDFS() {
+            const allNodes = nodes.get();
+            const nodeMap = {};
+            allNodes.forEach(n => nodeMap[n.id] = n);
+
+            const adjList = {};
+            allNodes.forEach(n => adjList[n.id] = []);
+            edges.get().forEach(edge => adjList[edge.from].push(edge.to));
+            
+            for (let nodeId in adjList) {
+                adjList[nodeId].sort((a, b) => nodeMap[a].x - nodeMap[b].x);
+            }
+
+            const visited = new Set();
+            const sequence = [];
+
+            function dfsRecursive(nodeId) {
+                if (!visited.has(nodeId)) {
+                    visited.add(nodeId); sequence.push(nodeId);
+                    for (let child of adjList[nodeId]) dfsRecursive(child);
+                }
+            }
+
+            let rootNode = allNodes.find(n => !edges.get().some(e => e.to === n.id))?.id;
+            if (rootNode) dfsRecursive(rootNode);
+            return sequence;
+        }
+
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+        async function startDFS() {
+            const dfsSequence = calculateDFS();
+            if (dfsSequence.length === 0) return alert("탐색할 노드가 없습니다!");
+
+            const btn = document.getElementById('startBtn');
+            const visitedNodesList = document.getElementById('visited-nodes');
+            const controlButtons = document.querySelectorAll('.control-panel button');
+            
+            controlButtons.forEach(b => b.disabled = true);
+            btn.innerText = "진행 중...";
+            
+            visitedNodesList.innerHTML = '';
+            // 노드 테두리 두께도 3으로 키워 명확하게 변경
+            nodes.forEach(node => nodes.update({id: node.id, color: {background: 'white', border: '#343a40'}, font: {color: '#343a40'}, borderWidth: 3}));
+            edges.forEach(edge => edges.update({id: edge.id, color: {color: '#adb5bd'}, width: 3}));
+
+            for (let i = 0; i < dfsSequence.length; i++) {
+                const nodeId = dfsSequence[i];
+                
+                if (i > 0) nodes.update({id: dfsSequence[i-1], color: {background: '#e9ecef', border: '#adb5bd'}, font: {color: '#6c757d'}});
+                nodes.update({id: nodeId, color: {background: '#d32f2f', border: '#b71c1c'}, font: {color: 'white'}, borderWidth: 5});
+
+                const circle = document.createElement('div');
+                circle.textContent = nodeId;
+                circle.className = 'visited-node';
+                visitedNodesList.appendChild(circle);
+
+                if (i < dfsSequence.length - 1) {
+                    const arrow = document.createElement('span');
+                    arrow.innerHTML = '&#8594;';
+                    arrow.className = 'arrow';
+                    visitedNodesList.appendChild(arrow);
+                }
+
+                if (i > 0) {
+                    const prevNodeId = dfsSequence[i-1];
+                    const edgeToUpdate = edges.get().find(e => e.from === prevNodeId && e.to === nodeId);
+                    if (edgeToUpdate) edges.update({id: edgeToUpdate.id, color: {color: '#d32f2f'}, width: 5});
+                }
+                await sleep(1000);
+            }
+            nodes.update({id: dfsSequence[dfsSequence.length - 1], color: {background: '#e9ecef', border: '#adb5bd'}, font: {color: '#6c757d'}});
+            
+            controlButtons.forEach(b => b.disabled = false);
+            btn.innerText = "🚀 DFS 다시 시작";
+        }
+    </script>
+</body>
+</html>
