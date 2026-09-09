@@ -275,74 +275,23 @@
         <div class="padlet-wrapper">
             
             <!-- 1단원 컬럼 -->
-            <div class="padlet-column">
-                <div class="column-header">1단원: 인공지능의 이해</div>
-                
-                <!-- 1단원 학습 카드 1 -->
-                <a href="#" target="_top" class="padlet-card">
-                    <div class="card-title">정보 윤리 사례 분석</div>
-                    <ul class="card-details">
-                        <li>내용: 올바른 디지털 시민 의식</li>
-                        <li>교과서: p.12 ~ p.18</li>
-                    </ul>
-                </a>
+            <div class="padlet-column" id="col-1">
+                <div class="column-header">1단원: 인공지능의 이해 </div>
             </div>
 
             <!-- 2단원 컬럼 -->
-            <div class="padlet-column">
-                <div class="column-header">2단원: 인공지능과 학습</div>
-
-                <!-- 카드 1 -->
-                <a href="#" target="_top" class="padlet-card">
-                    <div class="card-title">디지털 데이터 표현</div>
-                    <ul class="card-details">
-                        <li>내용: 2진수 변환 실습</li>
-                        <li>교과서: p.45 ~ p.50</li>
-                    </ul>
-                </a>
+            <div class="padlet-column" id="col-2">
+                  <div class="column-header">1단원: 인공지능과 학습</div>
             </div>
 
-            <!-- 3단원 컬럼 (기존에 작성하신 카드들) -->
-            <div class="padlet-column">
+            <!-- 3단원 컬럼 -->
+            <div class="padlet-column"id="col-3">
                 <div class="column-header">3단원: 인공지능의 사회적 영향</div>
-                
-                <!-- 카드 1 -->
-                <a href="https://app.notion.com/p/2-1-3d4157ce4cb980c58e12c67c1149c455?source=copy_link" target="_top" class="padlet-card">
-                    <div class="card-title">2-1 기계학습과 데이터</div>
-                    <ul class="card-details">
-                        <li>내용: 기계학습을 통한 문제해결과 데이터 수집</li>
-                        <li>교과서: p.70 ~ p.77</li>
-                    </ul>
-
-                <!-- 카드 2 -->
-                <a href="https://app.notion.com/p/2-2-3d5157ce4cb98029a3efd6860104546f?source=copy_link" target="_top" class="padlet-card">
-                    <div class="card-title">2-2 데이터 전처리와 핵심 속성 추출</div>
-                    <ul class="card-details">
-                        <li>내용: 결측치, 이상치 처리, 핵심 속성 추출</li>
-                        <li>교과서: p.82 ~ p.87</li>
-                    </ul>
-                </a>
-                
-                <!-- 카드 2 -->
-                <a href="#" target="_top" class="padlet-card">
-                    <div class="card-title">흐름도 시뮬레이터</div>
-                    <ul class="card-details">
-                        <li>내용: 조건문과 반복문 시각화</li>
-                        <li>교과서: p.115 ~ p.120</li>
-                    </ul>
-                </a>
             </div>
 
             <!-- 4단원 컬럼 -->
-            <div class="padlet-column">
+            <div class="padlet-column" id="col-4">
                 <div class="column-header">4단원: 인공지능 프로젝트</div>
-                <a href="#" target="_top" class="padlet-card">
-                    <div class="card-title">하드웨어 구성 요소</div>
-                    <ul class="card-details">
-                        <li>내용: CPU와 메모리의 역할</li>
-                        <li>교과서: p.150 ~ p.155</li>
-                    </ul>
-                </a>
             </div>
         </div>
         
@@ -388,6 +337,37 @@
         </div>
     </footer>
 
+<!-- 데이터를 쉽게 읽어오는 도구 (PapaParse) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script>
+    // 1번 단계에서 복사한 CSV 주소를 아래 따옴표 안에 넣으세요!
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNNrNkzmxeAO028-6JCSKkvgwptPunR_1jf1LXjZy1tlD9Zp_HPJiJtV4jLZmgD2X1z3zXamA8KTq/pub?output=csv";
 
+    Papa.parse(csvUrl, {
+        download: true,
+        header: true, // 첫 줄을 제목으로 인식
+        complete: function(results) {
+            const data = results.data;
+            
+            data.forEach(row => {
+                if(!row.제목) return; // 빈 줄은 건너뜀
+                
+                const cardHtml = `
+                    <a href="${row.링크}" target="_top" class="padlet-card">
+                        <div class="card-title">${row.제목}</div>
+                        <ul class="card-details">
+                            <li>내용: ${row.내용}</li>
+                            <li>교과서: ${row.페이지}</li>
+                        </ul>
+                    </a>
+                `;
+                
+                // 엑셀에 적힌 단원 숫자에 맞춰 기둥에 카드 삽입
+                const column = document.getElementById(`col-${row.단원}`);
+                if(column) column.insertAdjacentHTML("beforeend", cardHtml);
+            });
+        }
+    });
+</script>
 </body>
 </html>
