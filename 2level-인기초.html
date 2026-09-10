@@ -216,26 +216,7 @@
         font-size: 24px;
     }
 
-    /* ★ 반응형 처리 (모바일: 패들렛 세로 1단 배치) ★ */
-
-    @media (max-width: 650px) {
-        .padlet-wrapper {
-            flex-direction: column; /* ★ 추가: 모바일에서는 배열 방향을 세로로 변경 */
-        }
-        .padlet-column {
-            flex: 0 0 100%; /* 기둥이 모바일 화면 너비를 100% 꽉 채우도록 변경 */
-            max-width: 100%;
-        }
-        .board-container {
-            padding: 0 10px; 
-        }
-        .assignment-btn { 
-            padding: 14px 25px; 
-            font-size: 16px; 
-        }
-    }
-
-    /* 바닥글 (Footer) */
+/* 바닥글 (Footer) */
     footer {
         background-color: #151d19; 
         color: #C8D6CE;
@@ -254,14 +235,31 @@
     .footer-col p, .footer-col ul { margin: 0; padding: 0; list-style: none; line-height: 1.8; }
     .footer-col a { color: #D7CCC8; text-decoration: none; }
     .footer-col a:hover { color: var(--white); }
-    .footer-col li {list-style: none;}
-    @media (max-width: 600px) { .footer-content { grid-template-columns: repeat(2, 1fr); } }
-    /* 스마트폰 화면(너비 768px 이하)일 때 기둥 꽉 차게 만들기 */
+    
+    @media (max-width: 600px) { 
+        .footer-content { grid-template-columns: repeat(2, 1fr); } 
+    }
+
+    /* ★ 반응형 처리 (모바일: 패들렛 세로 1단 배치 및 꽉 찬 화면) ★ */
     @media (max-width: 768px) {
+        header {
+            padding: 15px 20px; /* 헤더 좌우 여백 축소 */
+        }
+        .padlet-wrapper {
+            flex-direction: column; /* 세로 1줄로 배치 */
+        }
         .padlet-column {
-            max-width: 100% !important; /* 300px 제한 해제 */
-            width: 100% !important;     /* 가로 폭 100% 채우기 */
-            margin-bottom: 20px;        /* 단원 사이에 여백 조금 추가 */
+            flex: 0 0 100%;
+            max-width: 100% !important; /* 기둥 300px 제한 풀기 */
+            width: 100% !important;     /* 가로 폭 100% 꽉 채우기 */
+            margin-bottom: 20px;
+        }
+        .board-container {
+            padding: 0 10px; 
+        }
+        .assignment-btn { 
+            padding: 14px 25px; 
+            font-size: 16px; 
         }
     }
 </style>
