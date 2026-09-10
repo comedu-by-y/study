@@ -43,17 +43,7 @@
         align-items: center;
         gap: 10px;
     }
-    .logo-circle {
-        background-color: var(--primary-brown);
-        color: var(--white);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 16px;
-    }
+
     nav {
         display: flex;
         gap: 25px;
@@ -208,9 +198,8 @@
     .footer-col a:hover {
         color: var(--white);
     }
-    .footer-col li {list-style: none;}
 
-    /* 모바일 반응형 처리 */
+/* 모바일 반응형 처리 */
     @media (max-width: 768px) {
         .card-grid {
             grid-template-columns: 1fr;
@@ -218,9 +207,18 @@
         .footer-content {
             grid-template-columns: repeat(2, 1fr);
         }
+        /* 2레벨과 동일하게 모바일 헤더 및 메뉴 최적화 */
         header {
-            flex-direction: column;
-            gap: 15px;
+            padding: 15px 20px; 
+            flex-direction: row; /* 헤더 요소 가로 배치 유지 */
+        }
+        nav {
+            gap: 12px; 
+            flex-wrap: nowrap; 
+        }
+        nav a {
+            font-size: 14px; 
+            white-space: nowrap; /* 글자 줄바꿈 및 깨짐 완벽 방지 */
         }
     }
 </style>
@@ -228,7 +226,6 @@
 <body>
 
     <!-- 1. 헤더 (상단 네비게이션) -->
-    <header>
     <header>
     <a href="https://comedu-by-y.github.io/study/" target="_top" class="logo">
     <!-- src 안에 실제 깃허브에 올린 로고 이미지 파일 이름을 적어주세요 -->
@@ -321,8 +318,10 @@
         <div class="footer-content">
             <div class="footer-col">
                 <h3>연락처</h3>
-                <li><a href="https://www.instagram.com/comedu_by_y"> instagram: @comedu_by_y </a></li>
-                <li><a href="https://mail.google.com/mail/?view=cm&fs=1&to=gyaps0602@isdj.hs.kr"> e-mail: gyaps0602@isdj.hs.kr </a></li>
+                <ul>
+                    <li><a href="https://www.instagram.com/comedu_by_y"> instagram: @comedu_by_y </a></li>
+                    <li><a href="https://mail.google.com/mail/?view=cm&fs=1&to=gyaps0602@isdj.hs.kr"> e-mail: gyaps0602@isdj.hs.kr </a></li>
+                </ul>
             </div>
 
             <div class="footer-col">
