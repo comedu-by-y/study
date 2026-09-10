@@ -47,17 +47,6 @@
     .logo:hover {
         transform: scale(1.05); /* 추가: 마우스 올리면 로고가 살짝 커짐 */
     }
-    .logo-circle {
-        background-color: var(--primary-brown);
-        color: var(--white);
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 16px;
-    }
 
     nav {
         display: flex;
@@ -261,6 +250,16 @@
             padding: 14px 25px; 
             font-size: 16px; 
         }
+        nav {
+        gap: 12px; /* 메뉴 사이 간격을 25px에서 12px로 축소 */
+        flex-wrap: nowrap; /* 세로로 떨어지는 것 방지 */
+        }
+        
+        nav a {
+            font-size: 14px; /* 모바일 화면에 맞춰 글자 크기 살짝 축소 */
+            white-space: nowrap; /* ★ 글자가 세로로 깨지거나 줄바꿈 되는 것 완벽 차단 */
+        }
+        
     }
 </style>
 </head>
@@ -268,11 +267,11 @@
 
     <!-- 헤더 -->
     <header>
-        <!-- ★ 로고를 클릭 가능한 링크(a 태그)로 변경했습니다 ★ -->
-        <!-- href에 1레벨(메인 홈페이지) 주소를 넣으시면 됩니다. -->
-        <a href="https://comedu-by-y.github.io/study/" target="_top" class="logo">
-            <div class="logo-circle">AI</div>일산대진고등학교 - 정보 수업
-        </a>
+    <a href="https://comedu-by-y.github.io/study/" target="_top" class="logo">
+    <!-- src 안에 실제 깃허브에 올린 로고 이미지 파일 이름을 적어주세요 -->
+    <img src="logo.png" alt="일산대진고등학교 정보 수업" style="height: 40px; width: auto; object-fit: contain;">
+</a>
+    </a>
         
         <nav><a href="#">홈</a><a href="#">과목</a><a href="#">자료실</a><a href="#">FAQ</a></nav>
     </header>
