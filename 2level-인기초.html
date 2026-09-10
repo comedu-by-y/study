@@ -256,6 +256,14 @@
     .footer-col a:hover { color: var(--white); }
     .footer-col li {list-style: none;}
     @media (max-width: 600px) { .footer-content { grid-template-columns: repeat(2, 1fr); } }
+    /* 스마트폰 화면(너비 768px 이하)일 때 기둥 꽉 차게 만들기 */
+    @media (max-width: 768px) {
+        .padlet-column {
+            max-width: 100% !important; /* 300px 제한 해제 */
+            width: 100% !important;     /* 가로 폭 100% 채우기 */
+            margin-bottom: 20px;        /* 단원 사이에 여백 조금 추가 */
+        }
+    }
 </style>
 </head>
 <body>
