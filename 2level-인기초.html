@@ -72,13 +72,18 @@
             data.forEach(row => {
                 if(!row.제목) return; // 빈 줄은 건너뜀
                 
+                // ★ 핵심 추가: 내용이나 페이지에 데이터가 있을 때만 <li> 태그 생성
+                let contentHtml = row.내용 ? `<li>내용: ${row.내용}</li>` : '';
+                let pageHtml = row.페이지 ? `<li>교과서: ${row.페이지}</li>` : '';
+                
+                // ★ 둘 중 하나라도 데이터가 있으면 <ul>로 묶어주고, 둘 다 없으면 아예 빈칸으로 처리
+                let detailsHtml = (row.내용 || row.페이지) ? `<ul class="card-details">${contentHtml}${pageHtml}</ul>` : '';
+                
+                // 완성된 조합으로 카드 생성
                 const cardHtml = `
                     <a href="${row.링크}" target="_top" class="padlet-card">
                         <div class="card-title">${row.제목}</div>
-                        <ul class="card-details">
-                            <li>내용: ${row.내용}</li>
-                            <li>교과서: ${row.페이지}</li>
-                        </ul>
+                        ${detailsHtml}
                     </a>
                 `;
                 
