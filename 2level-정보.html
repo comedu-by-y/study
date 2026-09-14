@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>과목: 인공지능기초</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="header-area"></div>
+    <!-- 3레벨 패들렛형 학습 보드 및 과제 제출 -->
+    <div class="board-container">
+        
+        <!-- 좌우로 스크롤되는 보드 영역 -->
+        <div class="padlet-wrapper">
+            
+            <!-- 1단원 컬럼 -->
+            <div class="padlet-column" id="col-1">
+                <div class="column-header">1단원: 컴퓨팅 시스템 </div>
+            </div>
+
+            <!-- 2단원 컬럼 -->
+            <div class="padlet-column" id="col-2">
+                  <div class="column-header">2단원: 데이터 </div>
+            </div>
+
+            <!-- 3단원 컬럼 -->
+            <div class="padlet-column"id="col-3">
+                <div class="column-header">3단원: 알고리즘과 프로그래밍 </div>
+            </div>
+
+            <!-- 4단원 컬럼 -->
+            <div class="padlet-column" id="col-4">
+                <div class="column-header">4단원: 인공지능 </div>
+            </div>
+
+            <!-- 5단원 컬럼 -->
+            <div class="padlet-column" id="col-5">
+                <div class="column-header">5단원: 디지털 문화 </div>
+            </div>
+
+            <!--6단원 컬럼 -->
+            <div class="padlet-column" id="col-6">
+                <div class="column-header">시뮬레이터 모음</div>
+            </div>
+
+            <!--7단원 컬럼 -->
+            <div class="padlet-column" id="col-7">
+                <div class="column-header">실습 코드 모음</div>
+            </div>
+        </div>
+        
+        <!-- 과제 제출 영역 (보드 아래 중앙에 고정) -->
+        <div class="assignment-section" style="max-width: 900px; margin: 40px auto 0 auto;">
+            <h2>📝 단원 학습을 마쳤나요?</h2>
+            <p>실습을 완료했다면, 아래 버튼을 눌러 구글 클래스룸에 과제를 제출해 주세요.</p>
+            <a href="https://classroom.google.com/" target="_blank" class="assignment-btn">
+                <span class="assignment-icon">🏫</span>
+                구글 클래스룸으로 과제 제출하기
+            </a>
+        </div>
+        
+    </div>
+
+<!-- 데이터를 쉽게 읽어오는 도구 (PapaParse) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script>
+    // 1번 단계에서 복사한 CSV 주소를 아래 따옴표 안에 넣으세요!
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSNNrNkzmxeAO028-6JCSKkvgwptPunR_1jf1LXjZy1tlD9Zp_HPJiJtV4jLZmgD2X1z3zXamA8KTq/pub?gid=0&single=true&output=csv";
+
+    Papa.parse(csvUrl, {
+        download: true,
+        header: true, // 첫 줄을 제목으로 인식
+        complete: function(results) {
+            const data = results.data;
+            
+            data.forEach(row => {
+                if(!row.제목) return; // 빈 줄은 건너뜀
+                
+                // ★ 핵심 추가: 내용이나 페이지에 데이터가 있을 때만 <li> 태그 생성
+                let contentHtml = row.내용 ? `<li>내용: ${row.내용}</li>` : '';
+                let pageHtml = row.페이지 ? `<li>교과서: ${row.페이지}</li>` : '';
+                
+                // ★ 둘 중 하나라도 데이터가 있으면 <ul>로 묶어주고, 둘 다 없으면 아예 빈칸으로 처리
+                let detailsHtml = (row.내용 || row.페이지) ? `<ul class="card-details">${contentHtml}${pageHtml}</ul>` : '';
+                
+                // 완성된 조합으로 카드 생성
+                const cardHtml = `
+                    <a href="${row.링크}" target="_top" class="padlet-card">
+                        <div class="card-title">${row.제목}</div>
+                        ${detailsHtml}
+                    </a>
+                `;
+                
+                // 엑셀에 적힌 단원 숫자에 맞춰 기둥에 카드 삽입
+                const column = document.getElementById(`col-${row.단원}`);
+                if(column) column.insertAdjacentHTML("beforeend", cardHtml);
+            });
+        }
+    });
+</script>
+    <div id="footer-area"></div>
+    <!-- 공통 헤더와 푸터를 빈 상자에 쏙쏙 넣어주는 스크립트 -->
+    <script>
+        // 1. header.html 파일을 찾아서 header-area 상자에 넣기
+        fetch('header.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-area').innerHTML = data;
+            });
+
+        // 2. footer.html 파일을 찾아서 footer-area 상자에 넣기
+        fetch('footer.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-area').innerHTML = data;
+            });
+    </script>   
+</body>
+</html>
