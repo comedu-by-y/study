@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-means 군집화 시뮬레이터</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: #4a90e2;
+            color: white;
+        }
+        button:hover { background-color: #357abd; }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #btn-next-step {
+            background-color: #e67e22;
+            font-size: 15px;
+        }
+        #btn-next-step:hover:not(:disabled) { background-color: #d35400; }
+        
+        #canvas-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        #status-text {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 15px;
+            min-height: 24px;
+        }
+        
+        /* SVG Elements */
+        .point { transition: fill 0.5s ease; }
+        .centroid-circle {
+            stroke: white;
+            stroke-width: 3px;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
+        }
+        .centroid-text {
+            font-weight: bold;
+            font-size: 16px;
+            fill: white;
+            text-anchor: middle;
+            dominant-baseline: central;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>K-means 알고리즘 시뮬레이터</h1>
+    
+    <div class="control-panel">
+        <div class="control-group">
+            <button id="btn-random-data">1. 랜덤 데이터 생성</button>
+        </div>
+        <div class="control-group">
+            <label for="k-slider">클러스터 수 (K): <strong id="k-value">3</strong></label>
+            <input type="range" id="k-slider" min="2" max="5" value="3">
+        </div>
+        <div class="control-group">
+            <button id="btn-init-centroids">2. 랜덤 중심점 설정</button>
+        </div>
+        <div class="control-group">
+            <button id="btn-next-step" disabled>3. 다음 단계</button>
+        </div>
+    </div>
+
+    <div id="status-text">시작하려면 '랜덤 데이터 생성' 버튼을 눌러주세요.</div>
+    <div id="canvas-container"></div>
+
+    <script>
+        const width = 800;
+        const height = 600;
+        const colors = ['#e6194B', '#4363d8', '#3cb44b', '#f58231', '#911eb4'];
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        
+        let points = [];
+        let centroids = [];
+        let state = 'INIT'; // INIT, ASSIGN, UPDATE, CONVERGED
+        
+        // 정규 분포 난수 생성기 (가우시안 분포)
+        function randomNormal(mean, stdDev) {
+            let u1 = Math.random();
+            let u2 = Math.random();
+            if (u1 === 0) u1 = 0.0001; // log(0) 방지
+            let randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.sin(2.0 * Math.PI * u2);
+            return mean + stdDev * randStdNormal;
+        }
+
+        const svg = d3.select("#canvas-container")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // 레이어 순서 설정 (선이 아래, 데이터 포인트, 중심점이 가장 위)
+        const linkLayer = svg.append("g").attr("class", "links");
+        const pointLayer = svg.append("g").attr("class", "points");
+        const centroidLayer = svg.append("g").attr("class", "centroids");
+
+        const statusText = d3.select("#status-text");
+        const btnNext = d3.select("#btn-next-step");
+
+        // UI 이벤트 바인딩
+        d3.select("#btn-random-data").on("click", generateData);
+        d3.select("#btn-init-centroids").on("click", initCentroids);
+        d3.select("#btn-next-step").on("click", nextStep);
+        d3.select("#k-slider").on("input", function() {
+            d3.select("#k-value").text(this.value);
+        });
+
+        function updateStatus(text) {
+            statusText.text(text);
+        }
+
+        // 1. 랜덤 데이터 생성 (뚜렷한 군집 형태를 가지도록 개선)
+        function generateData() {
+            // 3~5개의 가상의 중심점을 미리 생성
+            const numTrueClusters = Math.floor(Math.random() * 3) + 3; 
+            const trueCenters = [];
+            
+            for (let i = 0; i < numTrueClusters; i++) {
+                trueCenters.push({
+                    x: Math.random() * (width - 300) + 150,
+                    y: Math.random() * (height - 300) + 150
+                });
+            }
+
+            points = [];
+            const stdDev = 35; // 각 군집별 데이터의 퍼짐 정도
+            
+            for (let i = 0; i < 150; i++) {
+                // 데이터를 가상의 중심점들 주위에 정규 분포로 흩뿌림
+                let center = trueCenters[i % numTrueClusters];
+                let px = randomNormal(center.x, stdDev);
+                let py = randomNormal(center.y, stdDev);
+                
+                // 캔버스 밖으로 나가지 않도록 경계 보정
+                px = Math.max(20, Math.min(width - 20, px));
+                py = Math.max(20, Math.min(height - 20, py));
+                
+                points.push({ x: px, y: py, cluster: -1 });
+            }
+            
+            centroids = [];
+            linkLayer.selectAll("*").remove();
+            centroidLayer.selectAll("*").remove();
+            
+            drawPoints();
+            
+            state = 'INIT';
+            btnNext.property("disabled", true).text("3. 다음 단계");
+            updateStatus("뚜렷하게 뭉쳐진 새로운 데이터가 생성되었습니다. '랜덤 중심점 설정'을 눌러주세요.");
+        }
+
+        function drawPoints() {
+            const circles = pointLayer.selectAll("circle").data(points);
+            
+            circles.enter().append("circle")
+                .attr("class", "point")
+                .attr("r", 5)
+                .merge(circles)
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .style("fill", d => d.cluster === -1 ? "#999" : colors[d.cluster]);
+                
+            circles.exit().remove();
+        }
+
+        // 2. 랜덤 중심점 설정
+        function initCentroids() {
+            if (points.length === 0) generateData();
+
+            let k = parseInt(d3.select("#k-slider").property("value"));
+            
+            centroids = Array.from({length: k}, (_, i) => ({
+                id: i,
+                x: Math.random() * (width - 100) + 50,
+                y: Math.random() * (height - 100) + 50,
+                color: colors[i],
+                letter: letters[i]
+            }));
+
+            // 데이터 클러스터 초기화
+            points.forEach(p => p.cluster = -1);
+            linkLayer.selectAll("*").remove();
+            drawPoints();
+            drawCentroids();
+
+            state = 'ASSIGN';
+            btnNext.property("disabled", false).text("다음 단계 (데이터 할당)");
+            updateStatus("중심점이 배치되었습니다. '다음 단계'를 눌러 데이터를 중심점에 할당하세요.");
+        }
+
+        function drawCentroids() {
+            const centroidGroups = centroidLayer.selectAll("g").data(centroids, d => d.id);
+            
+            // 기존 중심점 제거
+            centroidGroups.exit().remove();
+            
+            // 새 중심점 추가
+            const enterGroups = centroidGroups.enter().append("g")
+                .attr("transform", d => `translate(${d.x}, ${d.y})`);
+                
+            enterGroups.append("circle")
+                .attr("class", "centroid-circle")
+                .attr("r", 15)
+                .style("fill", d => d.color);
+                
+            enterGroups.append("text")
+                .attr("class", "centroid-text")
+                .text(d => d.letter);
+
+            // 위치 업데이트 (이동 애니메이션 적용을 위해)
+            centroidGroups.transition().duration(800)
+                .attr("transform", d => `translate(${d.x}, ${d.y})`);
+        }
+
+        // 3. 다음 단계 실행 로직
+        function nextStep() {
+            if (state === 'ASSIGN') {
+                assignPoints();
+            } else if (state === 'UPDATE') {
+                updateCentroidPositions();
+            }
+        }
+
+        // 할당 단계: 데이터를 가장 가까운 중심점에 연결
+        function assignPoints() {
+            let changed = false;
+
+            points.forEach(p => {
+                let minDist = Infinity;
+                let closest = -1;
+                centroids.forEach((c, i) => {
+                    let d = Math.hypot(p.x - c.x, p.y - c.y);
+                    if (d < minDist) {
+                        minDist = d;
+                        closest = i;
+                    }
+                });
+                
+                if (p.cluster !== closest) changed = true;
+                p.cluster = closest;
+            });
+
+            if (!changed && points[0].cluster !== -1) {
+                state = 'CONVERGED';
+                btnNext.property("disabled", true).text("완료");
+                updateStatus("🎉 군집화가 완료되었습니다! (더 이상 변동 없음)");
+                return;
+            }
+
+            // 포인트 색상 업데이트
+            drawPoints();
+
+            // 연결선 애니메이션 (중심점에서 뻗어나가는 효과)
+            linkLayer.selectAll("*").remove(); // 기존 선 제거
+            
+            const lines = linkLayer.selectAll("line").data(points);
+            
+            lines.enter().append("line")
+                .attr("x1", d => centroids[d.cluster].x)
+                .attr("y1", d => centroids[d.cluster].y)
+                .attr("x2", d => centroids[d.cluster].x) // 시작점: 중심점
+                .attr("y2", d => centroids[d.cluster].y) // 시작점: 중심점
+                .attr("stroke", d => centroids[d.cluster].color)
+                .attr("stroke-width", 1.5)
+                .attr("opacity", 0.4)
+                .transition().duration(800) // 애니메이션 시간
+                .attr("x2", d => d.x) // 끝점: 데이터 포인트로 자라남
+                .attr("y2", d => d.y);
+
+            state = 'UPDATE';
+            btnNext.text("다음 단계 (중심점 이동)");
+            updateStatus("데이터가 할당되었습니다. '다음 단계'를 눌러 중심점을 이동하세요.");
+        }
+
+        // 업데이트 단계: 중심점을 클러스터의 평균 위치로 이동
+        function updateCentroidPositions() {
+            centroids.forEach(c => {
+                let clusterPoints = points.filter(p => p.cluster === c.id);
+                if (clusterPoints.length > 0) {
+                    let sumX = d3.sum(clusterPoints, p => p.x);
+                    let sumY = d3.sum(clusterPoints, p => p.y);
+                    c.x = sumX / clusterPoints.length;
+                    c.y = sumY / clusterPoints.length;
+                }
+            });
+
+            // 중심점 이동 애니메이션
+            drawCentroids();
+
+            // 연결선 이동 애니메이션 (선도 중심점을 따라감)
+            linkLayer.selectAll("line")
+                .transition().duration(800)
+                .attr("x1", d => centroids[d.cluster].x)
+                .attr("y1", d => centroids[d.cluster].y);
+
+            state = 'ASSIGN';
+            btnNext.text("다음 단계 (데이터 재할당)");
+            updateStatus("중심점이 군집의 평균 위치로 이동했습니다. '다음 단계'를 눌러 재할당하세요.");
+        }
+
+        // 초기 시작 시 빈 화면 방지를 위해 랜덤 데이터 하나 생성
+        generateData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>K-NN 시뮬레이터</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        canvas {
+            background-color: #e8e6f1; /* 이미지와 유사한 연보라색 배경 */
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        input[type=range] {
+            width: 200px;
+        }
+        .result {
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+        }
+        .result.A { background-color: #3b7bbd; }
+        .result.B { background-color: #8cb76c; }
+        .result.Tie { background-color: #f5a623; }
+        .instructions {
+            color: #555;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>K-NN 데이터 분류 시뮬레이터</h2>
+    <div class="result" id="result-box">현재 분류: 계산 중...</div>
+    
+    <canvas id="knnCanvas" width="700" height="450"></canvas>
+    
+    <div class="controls">
+        <div class="slider-container">
+            <label for="k-slider">K 값 (이웃의 수): </label>
+            <input type="range" id="k-slider" min="1" max="15" step="1" value="3">
+            <span id="k-value">3</span>
+        </div>
+    </div>
+    <p class="instructions">💡 노란색 점(?)을 마우스로 드래그해서 위치를 옮겨보며 결과를 확인해보세요.</p>
+</div>
+
+<script>
+    const canvas = document.getElementById('knnCanvas');
+    const ctx = canvas.getContext('2d');
+    const kSlider = document.getElementById('k-slider');
+    const kValueDisplay = document.getElementById('k-value');
+    const resultBox = document.getElementById('result-box');
+
+    // 학습 데이터 (이미지 기반 배치)
+    const dataPoints = [
+        // Class A (파란색)
+        {x: 120, y: 280, class: 'A'}, {x: 180, y: 220, class: 'A'},
+        {x: 200, y: 310, class: 'A'}, {x: 270, y: 330, class: 'A'},
+        {x: 340, y: 300, class: 'A'}, {x: 220, y: 400, class: 'A'},
+        {x: 350, y: 410, class: 'A'}, {x: 420, y: 360, class: 'A'},
+        {x: 530, y: 360, class: 'A'},
+        
+        // Class B (초록색)
+        {x: 170, y: 170, class: 'B'}, {x: 360, y: 180, class: 'B'},
+        {x: 400, y: 60, class: 'B'}, {x: 520, y: 80, class: 'B'},
+        {x: 440, y: 140, class: 'B'}, {x: 540, y: 160, class: 'B'},
+        {x: 630, y: 180, class: 'B'}, {x: 480, y: 230, class: 'B'},
+        {x: 650, y: 270, class: 'B'}
+    ];
+
+    // 타겟 데이터 (노란색 ?)
+    let targetPoint = {x: 400, y: 240};
+    
+    // 드래그 상태 관리
+    let isDragging = false;
+
+    // 유클리드 거리 계산 함수
+    function getDistance(p1, p2) {
+        return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+    }
+
+    // 시뮬레이터 그리기 및 계산
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let k = parseInt(kSlider.value);
+
+        // 1. 타겟과 모든 점 사이의 거리 계산 및 정렬
+        let distances = dataPoints.map(point => {
+            return {
+                ...point,
+                dist: getDistance(targetPoint, point)
+            };
+        });
+        distances.sort((a, b) => a.dist - b.dist);
+        let nearestNeighbors = distances.slice(0, k);
+
+        // 2. 이웃을 연결하는 선 그리기
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        nearestNeighbors.forEach(neighbor => {
+            ctx.beginPath();
+            ctx.moveTo(targetPoint.x, targetPoint.y);
+            ctx.lineTo(neighbor.x, neighbor.y);
+            ctx.strokeStyle = neighbor.class === 'A' ? 'rgba(59, 123, 189, 0.6)' : 'rgba(140, 183, 108, 0.6)';
+            ctx.stroke();
+        });
+        ctx.setLineDash([]); // 점선 초기화
+
+        // 3. 학습 데이터 점 그리기
+        dataPoints.forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 16, 0, Math.PI * 2);
+            ctx.fillStyle = point.class === 'A' ? '#3b7bbd' : '#8cb76c';
+            ctx.fill();
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // 텍스트 (A, B)
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(point.class, point.x, point.y + 1);
+        });
+
+        // 4. 타겟 점 그리기
+        ctx.beginPath();
+        ctx.arc(targetPoint.x, targetPoint.y, 18, 0, Math.PI * 2);
+        ctx.fillStyle = '#f5a623'; // 노란색 주황빛
+        ctx.fill();
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText('?', targetPoint.x, targetPoint.y + 1);
+
+        // 5. 분류 결과 판정 및 UI 업데이트
+        let counts = { 'A': 0, 'B': 0 };
+        nearestNeighbors.forEach(neighbor => counts[neighbor.class]++);
+        
+        resultBox.className = 'result';
+        if (counts['A'] > counts['B']) {
+            resultBox.innerText = `현재 분류: A (A:${counts['A']}개, B:${counts['B']}개)`;
+            resultBox.classList.add('A');
+        } else if (counts['B'] > counts['A']) {
+            resultBox.innerText = `현재 분류: B (A:${counts['A']}개, B:${counts['B']}개)`;
+            resultBox.classList.add('B');
+        } else {
+            resultBox.innerText = `현재 분류: 동점 (A:${counts['A']}개, B:${counts['B']}개)`;
+            resultBox.classList.add('Tie');
+        }
+    }
+
+    // 마우스 이벤트 (드래그 기능)
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        if (getDistance({x: mouseX, y: mouseY}, targetPoint) < 20) {
+            isDragging = true;
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            const rect = canvas.getBoundingClientRect();
+            targetPoint.x = e.clientX - rect.left;
+            targetPoint.y = e.clientY - rect.top;
+            draw();
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => { isDragging = false; });
+    canvas.addEventListener('mouseout', () => { isDragging = false; });
+
+    // 슬라이더 이벤트
+    kSlider.addEventListener('input', (e) => {
+        kValueDisplay.innerText = e.target.value;
+        draw();
+    });
+
+    // 초기 화면 그리기
+    draw();
+</script>
+
+</body>
+</html>
