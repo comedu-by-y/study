@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>선형회귀 완벽 비교 시뮬레이터</title>
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            color: #334155;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            max-width: 650px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #0f172a;
+            margin-top: 0;
+            font-size: 1.8rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+        
+        .scoreboard {
+            background-color: #eff6ff;
+            border: 2px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            color: #1e3a8a;
+            transition: all 0.3s ease;
+        }
+        .mse-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #2563eb;
+            display: block;
+            margin-top: 5px;
+        }
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        canvas {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: crosshair;
+            width: 100%;
+            max-width: 550px;
+            height: auto;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #475569;
+            font-weight: 500;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .line { width: 20px; height: 4px; display: inline-block; border-radius: 2px; }
+        .dashed { width: 20px; height: 0; border-top: 3px dashed #ef4444; display: inline-block; }
+        
+        .controls { margin-top: 25px; }
+        .control-group { margin-bottom: 20px; }
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+            font-size: 1.05rem;
+        }
+        .badge {
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 1rem;
+        }
+        input[type=range] { width: 100%; cursor: pointer; }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background-color: #10b981; color: white; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3); }
+        .btn-primary:hover { background-color: #059669; }
+        .btn-secondary { background-color: #64748b; color: white; }
+        .btn-secondary:hover { background-color: #475569; }
+
+        .result-box {
+            display: none; /* 기본은 숨김 */
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            background-color: #f0fdf4;
+            border: 2px solid #86efac;
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-title {
+            text-align: center;
+            font-weight: 800;
+            color: #166534;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .card.user { border-top: 4px solid #3b82f6; }
+        .card.optimal { border-top: 4px solid #10b981; }
+        .card-title { font-weight: bold; margin-bottom: 10px; font-size: 1.05rem; }
+        .card-data { font-family: monospace; font-size: 1.1rem; color: #475569; line-height: 1.5; }
+        .card-data span { font-weight: bold; color: #0f172a; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📐 선형회귀 완벽 비교 시뮬레이터</h1>
+    <div class="subtitle">나만의 추세선을 만들고, 알고리즘이 찾은 완벽한 정답과 비교해보세요!</div>
+    
+    <div class="scoreboard" id="scoreBoard">
+        현재 나의 손실 (MSE)
+        <span class="mse-value" id="mseValue">0.00</span>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="graphCanvas" width="550" height="400"></canvas>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item"><span class="dot" style="background: #334155;"></span> 데이터 점</div>
+        <div class="legend-item"><span class="line" style="background: #3b82f6;"></span> 나의 가설(추세선)</div>
+        <div class="legend-item"><span class="dashed"></span> 오차</div>
+        <div class="legend-item" id="optimalLegend" style="display: none;">
+            <span class="line" style="background: #10b981;"></span> 수학적 최적선(정답)
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>
+                <span>W (기울기: 선의 가파름)</span>
+                <span class="badge" id="wLabel">1.00</span>
+            </label>
+            <input type="range" id="wSlider" min="-1.5" max="3.5" step="0.01" value="1.00">
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <span>b (y절편: 선의 높낮이)</span>
+                <span class="badge" id="bLabel">0.00</span>
+            </label>
+            <input type="range" id="bSlider" min="-5" max="10" step="0.01" value="0.00">
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-primary" onclick="compareWithOptimal()">결정! (최적선 비교)</button>
+            <button class="btn btn-secondary" onclick="resetSimulation()">랜덤 데이터 다시 생성</button>
+        </div>
+    </div>
+
+    <div class="result-box" id="resultBox">
+        <div class="result-title">🎉 분석 결과 비교</div>
+        <div class="comparison-grid">
+            <div class="card user">
+                <div class="card-title">🧑‍🎓 내가 찾은 선</div>
+                <div class="card-data">
+                    W = <span id="resUserW">0.00</span><br>
+                    b = <span id="resUserB">0.00</span><br>
+                    MSE = <span id="resUserMSE">0.00</span>
+                </div>
+            </div>
+            <div class="card optimal">
+                <div class="card-title">🤖 수학적 최적선 (정답)</div>
+                <div class="card-data">
+                    W = <span id="resOptW">0.00</span><br>
+                    b = <span id="resOptB">0.00</span><br>
+                    MSE = <span id="resOptMSE">0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('graphCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // UI 요소
+    const wSlider = document.getElementById('wSlider');
+    const bSlider = document.getElementById('bSlider');
+    const wLabel = document.getElementById('wLabel');
+    const bLabel = document.getElementById('bLabel');
+    const mseValue = document.getElementById('mseValue');
+    const resultBox = document.getElementById('resultBox');
+    const optimalLegend = document.getElementById('optimalLegend');
+    const scoreBoard = document.getElementById('scoreBoard');
+
+    // 데이터 상태
+    let dataPoints = [];
+    let isComparing = false;
+    let optimalW = 0;
+    let optimalB = 0;
+    let optimalMSE = 0;
+    
+    // 그래프 좌표계 설정
+    const minX = 0, maxX = 10;
+    const minY = 0, maxY = 10;
+    
+    function toPixel(x, y) {
+        const px = (x - minX) / (maxX - minX) * canvas.width;
+        const py = canvas.height - ((y - minY) / (maxY - minY) * canvas.height);
+        return { px, py };
+    }
+
+    function generateData() {
+        dataPoints = [];
+        const trueW = Math.random() * 1.5 + 0.5; // 0.5 ~ 2.0
+        const trueB = Math.random() * 3 + 1;     // 1.0 ~ 4.0
+        
+        for (let i = 0; i < 20; i++) {
+            let x = Math.random() * 8 + 1; 
+            let noise = (Math.random() - 0.5) * 4; // 노이즈 (데이터의 퍼짐 정도)
+            let y = trueW * x + trueB + noise;
+            y = Math.max(0.5, Math.min(9.5, y)); // 화면 이탈 방지
+            dataPoints.push({ x, y });
+        }
+        calculateOptimalLine(); // 데이터 생성 시 정답을 미리 계산
+    }
+
+    // 최소제곱법 (Least Squares Method) 알고리즘
+    function calculateOptimalLine() {
+        let n = dataPoints.length;
+        let sumX = 0, sumY = 0;
+        
+        dataPoints.forEach(p => {
+            sumX += p.x;
+            sumY += p.y;
+        });
+        
+        let meanX = sumX / n;
+        let meanY = sumY / n;
+        
+        let numerator = 0;   // 분자
+        let denominator = 0; // 분모
+        
+        dataPoints.forEach(p => {
+            numerator += (p.x - meanX) * (p.y - meanY);
+            denominator += Math.pow((p.x - meanX), 2);
+        });
+        
+        optimalW = numerator / denominator;
+        optimalB = meanY - optimalW * meanX;
+        
+        // 최적선의 MSE 계산
+        let totalError = 0;
+        dataPoints.forEach(p => {
+            let predY = optimalW * p.x + optimalB;
+            totalError += Math.pow(predY - p.y, 2);
+        });
+        optimalMSE = totalError / n;
+    }
+
+    function calculateMSE(W, b) {
+        let totalError = 0;
+        dataPoints.forEach(p => {
+            let predY = W * p.x + b;
+            totalError += Math.pow(predY - p.y, 2);
+        });
+        return totalError / dataPoints.length;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const userW = parseFloat(wSlider.value);
+        const userB = parseFloat(bSlider.value);
+        
+        // 슬라이더 라벨 업데이트
+        wLabel.innerText = userW.toFixed(2);
+        bLabel.innerText = userB.toFixed(2);
+
+        // 배경 그리드
+        ctx.strokeStyle = '#f1f5f9';
+        ctx.lineWidth = 1;
+        for(let i=1; i<10; i++) {
+            let px1 = toPixel(i, 0), px2 = toPixel(i, 10);
+            ctx.beginPath(); ctx.moveTo(px1.px, px1.py); ctx.lineTo(px2.px, px2.py); ctx.stroke();
+            let py1 = toPixel(0, i), py2 = toPixel(10, i);
+            ctx.beginPath(); ctx.moveTo(py1.px, py1.py); ctx.lineTo(py2.px, py2.py); ctx.stroke();
+        }
+
+        let userMSE = calculateMSE(userW, userB);
+        mseValue.innerText = userMSE.toFixed(2);
+
+        // 1. 오차 간격(빨간 점선) - 사용자의 선 기준
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        
+        dataPoints.forEach(point => {
+            let predictedY = userW * point.x + userB;
+            let pActual = toPixel(point.x, point.y);
+            let pPred = toPixel(point.x, predictedY);
+            
+            ctx.beginPath();
+            ctx.moveTo(pActual.px, pActual.py);
+            ctx.lineTo(pPred.px, pPred.py);
+            ctx.stroke();
+        });
+        
+        ctx.setLineDash([]); // 점선 초기화
+
+        // 2. 사용자의 가설(추세선) - 파란색
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = 4;
+        let userStart = toPixel(minX, userW * minX + userB);
+        let userEnd = toPixel(maxX, userW * maxX + userB);
+        
+        ctx.beginPath();
+        ctx.moveTo(userStart.px, userStart.py);
+        ctx.lineTo(userEnd.px, userEnd.py);
+        ctx.stroke();
+
+        // 3. 최적선(정답) 그리기 - 비교 모드일 때만 녹색으로 렌더링
+        if (isComparing) {
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 4;
+            // 다른 선들과 겹치지 않게 약간 투명도 부여 (선택사항)
+            ctx.globalAlpha = 0.8; 
+            
+            let optStart = toPixel(minX, optimalW * minX + optimalB);
+            let optEnd = toPixel(maxX, optimalW * maxX + optimalB);
+            
+            ctx.beginPath();
+            ctx.moveTo(optStart.px, optStart.py);
+            ctx.lineTo(optEnd.px, optEnd.py);
+            ctx.stroke();
+            
+            ctx.globalAlpha = 1.0; // 투명도 롤백
+        }
+
+        // 4. 실제 데이터 점
+        ctx.fillStyle = '#334155';
+        dataPoints.forEach(point => {
+            let p = toPixel(point.x, point.y);
+            ctx.beginPath();
+            ctx.arc(p.px, p.py, 5.5, 0, Math.PI * 2);
+            ctx.fill();
+        });
+    }
+
+    function compareWithOptimal() {
+        isComparing = true;
+        optimalLegend.style.display = 'flex';
+        resultBox.style.display = 'block';
+        
+        // 사용자가 찾은 값
+        const userW = parseFloat(wSlider.value);
+        const userB = parseFloat(bSlider.value);
+        const userMSE = calculateMSE(userW, userB);
+        
+        // 결과 UI에 데이터 주입
+        document.getElementById('resUserW').innerText = userW.toFixed(2);
+        document.getElementById('resUserB').innerText = userB.toFixed(2);
+        document.getElementById('resUserMSE').innerText = userMSE.toFixed(2);
+        
+        // 최적선(수학적 정답) 데이터 주입
+        document.getElementById('resOptW').innerText = optimalW.toFixed(2);
+        document.getElementById('resOptB').innerText = optimalB.toFixed(2);
+        document.getElementById('resOptMSE').innerText = optimalMSE.toFixed(2);
+
+        // 스코어보드 색상 변경으로 완료 느낌 부여
+        scoreBoard.style.backgroundColor = '#f0fdf4';
+        scoreBoard.style.borderColor = '#86efac';
+        scoreBoard.style.color = '#166534';
+        mseValue.style.color = '#15803d';
+        
+        draw();
+    }
+
+    function resetSimulation() {
+        isComparing = false;
+        optimalLegend.style.display = 'none';
+        resultBox.style.display = 'none';
+        
+        // 스코어보드 스타일 원상복구
+        scoreBoard.style.backgroundColor = '#eff6ff';
+        scoreBoard.style.borderColor = '#bfdbfe';
+        scoreBoard.style.color = '#1e3a8a';
+        mseValue.style.color = '#2563eb';
+        
+        // 슬라이더 중앙 초기화
+        wSlider.value = 1.0;
+        bSlider.value = 0.0;
+        
+        generateData();
+        draw();
+    }
+
+    // 실시간 슬라이더 조작 시 렌더링
+    wSlider.addEventListener('input', draw);
+    bSlider.addEventListener('input', draw);
+
+    // 프로그램 시작
+    resetSimulation();
+</script>
+
+</body>
+</html>
